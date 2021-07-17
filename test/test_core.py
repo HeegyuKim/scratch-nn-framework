@@ -2,7 +2,7 @@ import unittest
 from dezero import *
 
 
-class SquareTest(unittest.TestCase):
+class OperatorTest(unittest.TestCase):
     def test_forward(self):
         x = Variable(np.array(2.0))
         y = square(x)
@@ -52,6 +52,52 @@ class SquareTest(unittest.TestCase):
     def test_pow(self):
         x = Variable(np.array(2))
         self.assertEqual((x ** 2).data, 4.0)
+
+
+class DifferentiationTest(unittest.TestCase):
+    def test_sphere(self):
+        def sphere(x, y):
+            return x ** 2 + y ** 2
+
+        x = Variable(np.array(1.0))
+        y = Variable(np.array(1.0))
+        z = sphere(x, y)
+        z.backward()
+
+        self.assertEqual(x.grad, 2.0)
+        self.assertEqual(y.grad, 2.0)
+
+    def test_matyas(self):
+        def matyas(x, y):
+            return 0.26 * (x ** 2 + y ** 2) - 0.48 * x * y
+
+        x = Variable(np.array(1.0))
+        y = Variable(np.array(1.0))
+        z = matyas(x, y)
+        z.backward()
+
+        self.assertTrue(np.isclose(x.grad, 0.04))
+        self.assertTrue(np.isclose(y.grad, 0.04))
+
+    def test_goldstein(self):
+        def goldstein(x, y):
+            return (
+                1
+                + (x + y + 1) ** 2
+                * (19 - 14 * x + 3 * x ** 2 - 14 * y + 6 * x * y + 3 * y ** 2)
+            ) * (
+                30
+                + (2 * x - 3 * y) ** 2
+                * (18 - 32 * x + 12 * x ** 2 + 48 * y - 36 * x * y + 27 * y ** 2)
+            )
+
+        x = Variable(np.array(1.0))
+        y = Variable(np.array(1.0))
+        z = goldstein(x, y)
+        z.backward()
+
+        self.assertTrue(np.isclose(x.grad, -5376))
+        self.assertTrue(np.isclose(y.grad, 8064))
 
 
 unittest.main()

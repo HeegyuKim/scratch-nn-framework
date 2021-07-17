@@ -21,6 +21,13 @@ def as_array(x):
     return np.array(x) if np.isscalar(x) else x
 
 
+def numerical_diff(f, x, eps=1e-4):
+    x0 = Variable(as_array(x.data - eps))
+    x1 = Variable(as_array(x.data + eps))
+    y0, y1 = f(x0), f(x1)
+    return (y1.data - y0.data) / (2 * eps)
+
+
 class Config:
     enable_backprop = True
 
@@ -141,7 +148,7 @@ class Mul(Function):
         return x * y
 
     def backward(self, gy):
-        return self.inputs[0].data * gy, self.inputs[1].data * gy
+        return self.inputs[1].data * gy, self.inputs[0].data * gy
 
 
 class Square(Function):
@@ -245,19 +252,13 @@ def neg(x):
     return Neg()(x)
 
 
-Variable.__add__ = add
-Variable.__sub__ = sub
-Variable.__rsub__ = rsub
-Variable.__radd__ = add
-Variable.__mul__ = mul
-Variable.__rmul__ = mul
-Variable.__truediv__ = div
-Variable.__rtruediv__ = rdiv
-Variable.__pow__ = pow
-
-
-def numerical_diff(f, x, eps=1e-4):
-    x0 = Variable(as_array(x.data - eps))
-    x1 = Variable(as_array(x.data + eps))
-    y0, y1 = f(x0), f(x1)
-    return (y1.data - y0.data) / (2 * eps)
+def setup_variable():
+    Variable.__add__ = add
+    Variable.__sub__ = sub
+    Variable.__rsub__ = rsub
+    Variable.__radd__ = add
+    Variable.__mul__ = mul
+    Variable.__rmul__ = mul
+    Variable.__truediv__ = div
+    Variable.__rtruediv__ = rdiv
+    Variable.__pow__ = pow
