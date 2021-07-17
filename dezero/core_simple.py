@@ -49,9 +49,9 @@ class Variable:
         self.creator = func
         self.generation = func.generation + 1
 
-    def backward(self, retain_grad=False):
+    def backward(self, retain_grad=False, create_graph=False):
         if self.grad is None:
-            self.grad = np.ones_like(self.data)
+            self.grad = Variable(np.ones_like(self.data))
 
         funcs = []
         seen_set = set()
@@ -83,6 +83,27 @@ class Variable:
 
     def cleargrad(self):
         self.grad = None
+
+    def reshape(self, *shape):
+        from .functions import reshape
+
+        if len(shape) == 1 and isinstance(shape[0], (tuple, list)):
+            shape = shape[0]
+        return reshape(self, shape)
+
+    def transpose(self):
+        from .functions import transpose
+
+        return transpose(self)
+
+    def sum(self, axis=None, keepdims=False):
+        from .functions import sum
+
+        return sum(self, axis, keepdims)
+
+    @property
+    def T(self):
+        return self.transpose()
 
     @property
     def shape(self):
@@ -148,7 +169,7 @@ class Mul(Function):
         return x * y
 
     def backward(self, gy):
-        return self.inputs[1].data * gy, self.inputs[0].data * gy
+        return self.inputs[1] * gy, self.inputs[0] * gy
 
 
 class Square(Function):
@@ -156,7 +177,7 @@ class Square(Function):
         return x ** 2
 
     def backward(self, gy):
-        x = self.inputs[0].data
+        x = self.inputs[0]
         gx = 2 * x * gy
         return gx
 
@@ -166,7 +187,7 @@ class Exp(Function):
         return np.exp(x)
 
     def backward(self, gy):
-        x = self.inputs[0].data
+        x = self.inputs[0]
         return np.exp(x) * gy
 
 
@@ -191,7 +212,7 @@ class Div(Function):
         return x0 / x1
 
     def backward(self, gy):
-        x0, x1 = self.inputs[0].data, self.inputs[1].data
+        x0, x1 = self.inputs[0], self.inputs[1]
         gx0 = gy / x1
         gx1 = gy * (-x0 / x1 ** 2)
         return gx0, gx1
@@ -205,7 +226,7 @@ class Pow(Function):
         return x0 ** self.c
 
     def backward(self, gy):
-        x = self.inputs[0].data
+        x = self.inputs[0]
         c = self.c
         gx = c * x ** (c - 1) * gy
         return gx
@@ -262,3 +283,4 @@ def setup_variable():
     Variable.__truediv__ = div
     Variable.__rtruediv__ = rdiv
     Variable.__pow__ = pow
+    Variable.__neg__ = neg

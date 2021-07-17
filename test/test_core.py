@@ -1,5 +1,17 @@
 import unittest
+import numpy as np
 from dezero import *
+
+
+class VariableTest(unittest.TestCase):
+    def test_reshape(self):
+        x = Variable(np.array([1, 2, 3, 4]))
+        y = x.reshape(2, 2)
+        z = x.reshape((2, 2))
+
+        self.assertEqual(y.shape, (2, 2))
+        self.assertEqual(z.shape, (2, 2))
+        self.assertTrue(np.allclose(y.data, z.data))
 
 
 class OperatorTest(unittest.TestCase):
@@ -14,7 +26,7 @@ class OperatorTest(unittest.TestCase):
         y = square(x)
         y.backward()
         expected = np.array(6.0)
-        self.assertEqual(x.grad, expected)
+        self.assertEqual(x.grad.data, expected)
 
     def test_gradient_check(self):
         x = Variable(np.array(1))
@@ -22,7 +34,7 @@ class OperatorTest(unittest.TestCase):
         y.backward()
 
         num_grad = numerical_diff(square, x)
-        flg = np.allclose(x.grad, num_grad)
+        flg = np.allclose(x.grad.data, num_grad)
         self.assertTrue(flg)
 
     def test_add(self):
@@ -64,8 +76,8 @@ class DifferentiationTest(unittest.TestCase):
         z = sphere(x, y)
         z.backward()
 
-        self.assertEqual(x.grad, 2.0)
-        self.assertEqual(y.grad, 2.0)
+        self.assertEqual(x.grad.data, 2.0)
+        self.assertEqual(y.grad.data, 2.0)
 
     def test_matyas(self):
         def matyas(x, y):
@@ -76,8 +88,8 @@ class DifferentiationTest(unittest.TestCase):
         z = matyas(x, y)
         z.backward()
 
-        self.assertTrue(np.isclose(x.grad, 0.04))
-        self.assertTrue(np.isclose(y.grad, 0.04))
+        self.assertTrue(np.isclose(x.grad.data, 0.04))
+        self.assertTrue(np.isclose(y.grad.data, 0.04))
 
     def test_goldstein(self):
         def goldstein(x, y):
@@ -96,8 +108,8 @@ class DifferentiationTest(unittest.TestCase):
         z = goldstein(x, y)
         z.backward()
 
-        self.assertTrue(np.isclose(x.grad, -5376))
-        self.assertTrue(np.isclose(y.grad, 8064))
+        self.assertTrue(np.isclose(x.grad.data, -5376))
+        self.assertTrue(np.isclose(y.grad.data, 8064))
 
 
 unittest.main()
