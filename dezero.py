@@ -3,6 +3,10 @@ import weakref
 import contextlib
 
 
+def as_variable(obj):
+    return obj if isinstance(obj, Variable) else Variable(obj)
+
+
 @contextlib.contextmanager
 def using_config(name, value):
     old_attr = getattr(Config, name)
@@ -22,6 +26,7 @@ class Config:
     
     
 class Variable:
+    __array_priority__ = 200
     
     def __init__(self, data, name=None):
         if data is not None and not isinstance(data, np.ndarray):
@@ -101,7 +106,8 @@ class Variable:
 class Function:
     
     def __call__(self, *inputs):
-        xs = [x.data for x in inputs] 
+        inputs = [as_variable(x) for x in inputs] 
+        xs = [x.data for x in inputs]
         ys = self.forward(*xs)
         if not isinstance(ys, tuple):
             ys = (ys, )
@@ -152,20 +158,93 @@ class Exp(Function):
         x = self.inputs[0].data
         return np.exp(x) * gy
     
+class Neg(Function):
+    def forward(self, x):
+        return -x
+    
+    def backward(self, gy):
+        return -gy
+    
+class Sub(Function):
+    def forward(self, x0, x1):
+        return x0 - x1
+    def backward(self, gy):
+        return gy, -gy
+    
+class Div(Function):
+    def forward(self, x0, x1):
+        return x0 / x1
+    
+    def backward(self, gy):
+        x0, x1 = self.inputs[0].data, self.inputs[1].data
+        gx0 = gy / x1
+        gx1 = gy * (-x0 / x1 ** 2)
+        return gx0, gx1
+    
+class Pow(Function):
+    def __init__(self, c):
+        self.c = c
+        
+    def forward(self, x0):
+        return x0 ** self.c
+    
+    def backward(self, gy):
+        x = self.inputs[0].data
+        c = self.c
+        gx = c * x ** (c - 1) * gy
+        return gx
+    
+    
 def add(x, y):
-    return Add()(x, y)
+    return Add()(x, as_array(y))
+
+
+def sub(x0, x1):
+    return Sub()(x0, as_array(x1))
+
+
+def rsub(x0, x1):
+    x1 = as_array(x1)
+    return Sub()(x1, as_array(x0))
+
 
 def mul(x, y):
-    return Mul()(x, y)
+    return Mul()(x, as_array(y))
+
+
+def div(x0, x1):
+    return Div()(x0, as_array(x1))
+
+
+def rdiv(x0, x1):
+    return Div()(as_array(x1), x0)
+
 
 def square(x):
     return Square()(x)
 
+
 def exp(x):
     return Exp()(x)
+
+
+def pow(x, c):
+    return Pow(c)(x)
+
+def neg(x):
+    return Neg()(x)
+
     
 Variable.__add__ = add
+Variable.__sub__ = sub
+Variable.__rsub__ = rsub
+Variable.__radd__ = add
 Variable.__mul__ = mul
+Variable.__rmul__ = mul
+Variable.__truediv__ = div
+Variable.__rtruediv__ = rdiv
+Variable.__pow__ = pow
+
     
 def numerical_diff(f, x, eps=1e-4):
     x0 = Variable(as_array(x.data - eps))

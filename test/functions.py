@@ -25,5 +25,34 @@ class SquareTest(unittest.TestCase):
         num_grad = numerical_diff(square, x)
         flg = np.allclose(x.grad, num_grad)
         self.assertTrue(flg)
+    
+    def test_add(self):
+        x = Variable(np.array(2))
+        self.assertEqual((x + 2).data, 4.0)
+        self.assertEqual((2 + x).data, 4.0)
+        self.assertEqual((x + x).data, 4.0)
+        
+    def test_sub(self):
+        x = Variable(np.array(2))
+        self.assertEqual((x - 2).data, 0.0)
+        self.assertEqual((2 - x).data, 0.0)
+        self.assertEqual((x - x).data, 0.0)
+        
+    def test_mul(self):
+        x = Variable(np.array(2))
+        self.assertEqual((x * 2).data, 4.0)
+        self.assertEqual((2 * x).data, 4.0)
+        self.assertEqual((x * x).data, 4.0)
+        
+    def test_div(self):
+        x = Variable(np.array(2))
+        self.assertEqual((x / 2).data, 1.0)
+        self.assertEqual((2 / x).data, 1.0)
+        self.assertEqual((x / x).data, 1.0)
+    
+    def test_pow(self):
+        x = Variable(np.array(2))
+        self.assertEqual((x ** 2).data, 4.0)
+        
         
 unittest.main()
