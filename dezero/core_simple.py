@@ -40,7 +40,7 @@ class Variable:
             raise TypeError(f"{type(data)}는 지원하지 않습니다.")
 
         self.data = data
-        self.name = None
+        self.name = name
         self.grad = None
         self.creator = None
         self.generation = 0

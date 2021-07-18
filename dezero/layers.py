@@ -2,7 +2,7 @@ import weakref
 import numpy as np
 
 from .core_simple import Parameter
-from . import functions as F
+from . import functions as F, utils
 
 
 class Layer:
@@ -10,7 +10,7 @@ class Layer:
         self._params = set()
 
     def __setattr__(self, name, value):
-        if isinstance(value, Parameter):
+        if isinstance(value, (Parameter, Layer)):
             self._params.add(name)
         super().__setattr__(name, value)
 
@@ -28,7 +28,11 @@ class Layer:
 
     def params(self):
         for name in self._params:
-            yield self.__dict__[name]
+            obj = self.__dict__[name]
+            if isinstance(obj, Layer):
+                yield from obj
+            else:
+                yield obj
 
     def cleargrads(self):
         for param in self.params():
@@ -61,3 +65,9 @@ class Linear(Layer):
             self._init_W()
 
         return F.linear(x, self.W, self.b)
+
+    
+class Model(Layer):
+    def plot(self, *inputs, to_file="model.png"):
+        y = self.forward(*inputs)
+        return utils.plot_dot_graph(y, verbose=True, to_file=to_file)
