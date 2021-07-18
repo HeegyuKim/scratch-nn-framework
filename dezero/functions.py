@@ -138,7 +138,7 @@ def linear(x, W, b=None):
 
 class Sigmoid(Function):
     def forward(self, x):
-        return x.tanh(x * 0.5) * 0.5 + 0.5
+        return np.tanh(x * 0.5) * 0.5 + 0.5
 
     def backward(self, gy):
         y = self.outputs[0]()
