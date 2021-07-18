@@ -30,7 +30,7 @@ class Layer:
         for name in self._params:
             obj = self.__dict__[name]
             if isinstance(obj, Layer):
-                yield from obj
+                yield from obj.params()
             else:
                 yield obj
 
@@ -66,7 +66,7 @@ class Linear(Layer):
 
         return F.linear(x, self.W, self.b)
 
-    
+
 class Model(Layer):
     def plot(self, *inputs, to_file="model.png"):
         y = self.forward(*inputs)

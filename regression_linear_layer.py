@@ -2,6 +2,7 @@ import numpy as np
 from dezero import Variable
 import dezero.functions as F
 import dezero.layers as L
+import dezero.optimizer as O
 
 
 np.random.seed(0)
