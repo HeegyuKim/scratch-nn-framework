@@ -319,6 +319,8 @@ def neg(x):
 
 
 def setup_variable():
+    from dezero import functions as F
+
     Variable.__add__ = add
     Variable.__sub__ = sub
     Variable.__rsub__ = rsub
@@ -329,3 +331,4 @@ def setup_variable():
     Variable.__rtruediv__ = rdiv
     Variable.__pow__ = pow
     Variable.__neg__ = neg
+    Variable.__getitem__ = F.get_item
