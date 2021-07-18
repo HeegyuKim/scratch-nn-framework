@@ -158,18 +158,40 @@ class Function:
 
 class Add(Function):
     def forward(self, x, y):
+        self.x_shape = x.shape
+        self.y_shape = y.shape
         return (x + y,)
 
     def backward(self, gy):
-        return gy, gy
+        gx, gy = gy, gy
+
+        if self.x_shape != self.y_shape:
+            from . import functions as F
+
+            gx = F.sum_to(gx, self.x_shape)
+            gy = F.sum_to(gy, self.y_shape)
+
+        return gx, gy
 
 
 class Mul(Function):
     def forward(self, x, y):
+        self.x_shape = x.shape
+        self.y_shape = y.shape
         return x * y
 
     def backward(self, gy):
-        return self.inputs[1] * gy, self.inputs[0] * gy
+        x, y = self.inputs
+        gx = gy * y
+        gy = gy * x
+
+        if self.x_shape != self.y_shape:
+            from . import functions as F
+
+            gx = F.sum_to(gx, self.x_shape)
+            gy = F.sum_to(gy, self.y_shape)
+
+        return gx, gy
 
 
 class Square(Function):
@@ -201,20 +223,39 @@ class Neg(Function):
 
 class Sub(Function):
     def forward(self, x0, x1):
+        self.x0_shape, self.x1_shape = x0.shape, x1.shape
         return x0 - x1
 
     def backward(self, gy):
-        return gy, -gy
+        x0, x1 = self.inputs
+        gx0 = gy
+        gx1 = -gy
+
+        if self.x0_shape != self.x1_shape:
+            from . import functions as F
+
+            gx0 = F.sum_to(gx0, self.x0_shape)
+            gx1 = F.sum_to(gx1, self.x1_shape)
+
+        return gx0, gx1
 
 
 class Div(Function):
     def forward(self, x0, x1):
+        self.x0_shape, self.x1_shape = x0.shape, x1.shape
         return x0 / x1
 
     def backward(self, gy):
-        x0, x1 = self.inputs[0], self.inputs[1]
+        x0, x1 = self.inputs
         gx0 = gy / x1
         gx1 = gy * (-x0 / x1 ** 2)
+
+        if self.x0_shape != self.x1_shape:
+            from . import functions as F
+
+            gx0 = F.sum_to(gx0, self.x0_shape)
+            gx1 = F.sum_to(gx1, self.x1_shape)
+
         return gx0, gx1
 
 
