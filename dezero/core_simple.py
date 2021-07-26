@@ -17,6 +17,10 @@ def using_config(name, value):
         setattr(Config, name, old_attr)
 
 
+def no_grad():
+    return using_config("enable_backprop", False)
+
+
 def as_array(x):
     return np.array(x) if np.isscalar(x) else x
 

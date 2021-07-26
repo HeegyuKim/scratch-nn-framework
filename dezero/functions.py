@@ -1,4 +1,4 @@
-from .core_simple import as_variable, Function
+from .core_simple import Variable, as_variable, as_array, Function
 from . import utils
 import numpy as np
 
@@ -191,3 +191,59 @@ class GetItemGrad(Function):
 
 def get_item(x, slices):
     return GetItem(slices)(x)
+
+
+def accuracy(y, t):
+    y, t = as_variable(y), as_variable(t)
+    pred = y.data.argmax(axis=1).reshape(t.shape)
+    result = pred == t.data
+    acc = result.mean()
+    return Variable(as_array(acc))
+
+
+class Softmax(Function):
+    def __init__(self, axis=1):
+        self.axis = axis
+
+    def forward(self, x):
+        y = x - x.max(axis=self.axis, keepdims=True)
+        y = np.exp(x, y)
+        y /= y.sum(axis=self.axis, keepdims=True)
+        return y
+
+    def backward(self, gy):
+        y = self.outputs[0]()
+        gx = y * gy
+        sumdx = gx.sum(axis=self.axis, keepdims=True)
+        gx -= y * sumdx
+        return gx
+
+
+def softmax(x, axis=1):
+    return Softmax(axis)(x)
+
+
+class SoftmaxCrossEntropy(Function):
+    def forward(self, x, t):
+        N = x.shape[0]
+        log_z = utils.logsumexp(x, axis=1)
+        log_p = x - log_z
+        log_p = log_p[np.arange(N), t.ravel()]
+        y = -log_p.sum() / np.float32(N)
+        return y
+
+    def backward(self, gy):
+        x, t = self.inputs
+        N, CLS_NUM = x.shape
+
+        gy *= 1 / N
+        y = softmax(x)
+
+        # convert to one-hot
+        t_onehot = np.eye(CLS_NUM, dtype=t.dtype)[t.data]
+        y = (y - t_onehot) * gy
+        return y
+
+
+def softmax_cross_entropy(x, t):
+    return SoftmaxCrossEntropy()(x, t)

@@ -1,4 +1,5 @@
 import numpy as np
+
 try:
     import Image
 except ImportError:
@@ -11,6 +12,7 @@ class Compose:
     Args:
         transforms (list): list of transforms
     """
+
     def __init__(self, transforms=[]):
         self.transforms = transforms
 
@@ -26,14 +28,14 @@ class Compose:
 # Transforms for PIL Image
 # =============================================================================
 class Convert:
-    def __init__(self, mode='RGB'):
+    def __init__(self, mode="RGB"):
         self.mode = mode
 
     def __call__(self, img):
-        if self.mode == 'BGR':
-            img = img.convert('RGB')
+        if self.mode == "BGR":
+            img = img.convert("RGB")
             r, g, b = img.split()
-            img = Image.merge('RGB', (b, g, r))
+            img = Image.merge("RGB", (b, g, r))
             return img
         else:
             return img.convert(self.mode)
@@ -45,6 +47,7 @@ class Resize:
         size (int or (int, int)): Desired output size
         mode (int): Desired interpolation.
     """
+
     def __init__(self, size, mode=Image.BILINEAR):
         self.size = pair(size)
         self.mode = mode
@@ -59,6 +62,7 @@ class CenterCrop:
         size (int or (int, int)): Desired output size.
         mode (int): Desired interpolation.
     """
+
     def __init__(self, size):
         self.size = pair(size)
 
@@ -74,6 +78,7 @@ class CenterCrop:
 
 class ToArray:
     """Convert PIL Image to NumPy array."""
+
     def __init__(self, dtype=np.float32):
         self.dtype = dtype
 
@@ -91,6 +96,7 @@ class ToArray:
 
 class ToPIL:
     """Convert NumPy array to PIL Image."""
+
     def __call__(self, array):
         data = array.transpose(1, 2, 0)
         return Image.fromarray(data)
@@ -110,6 +116,7 @@ class Normalize:
          each channel.
         std (float or sequence):
     """
+
     def __init__(self, mean=0, std=1):
         self.mean = mean
         self.std = std
@@ -129,8 +136,8 @@ class Normalize:
 
 
 class Flatten:
-    """Flatten a NumPy array.
-    """
+    """Flatten a NumPy array."""
+
     def __call__(self, array):
         return array.flatten()
 

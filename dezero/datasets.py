@@ -6,30 +6,31 @@ class Dataset:
         self.train = train
         self.transform = transform
         self.target_transform = target_transform
-        
+
         if self.transform is None:
             self.transform = lambda x: x
         if self.target_transform is None:
             self.target_transform = lambda x: x
-            
+
         self.data = None
         self.label = None
         self.prepare()
-        
-        
+
     def __getitem__(self, index):
         assert np.isscalar(index)
         data = self.transform(self.data[index])
-        label = self.target_transform(self.label[index]) if self.label is not None \
-                else None
+        label = (
+            self.target_transform(self.label[index]) if self.label is not None else None
+        )
         return data, label
-    
+
     def __len__(self):
         return len(self.data)
-    
+
     def prepare(self):
         pass
-    
+
+
 def get_spiral(train=True):
     seed = 1984 if train else 2020
     np.random.seed(seed=seed)
@@ -45,8 +46,7 @@ def get_spiral(train=True):
             radius = 1.0 * rate
             theta = j * 4.0 + 4.0 * rate + np.random.randn() * 0.2
             ix = num_data * j + i
-            x[ix] = np.array([radius * np.sin(theta),
-                              radius * np.cos(theta)]).flatten()
+            x[ix] = np.array([radius * np.sin(theta), radius * np.cos(theta)]).flatten()
             t[ix] = j
     # Shuffle
     indices = np.random.permutation(num_data * num_class)
